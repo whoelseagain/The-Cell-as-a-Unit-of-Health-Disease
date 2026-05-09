@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cell as a Unit of Health & Disease</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050d1a;
+    --bg2: #071122;
+    --panel: #0a1929;
+    --panel2: #0d2137;
+    --accent: #00e5c8;
+    --accent2: #0088ff;
+    --accent3: #ff6b35;
+    --accent4: #a855f7;
+    --text: #e2eaf5;
+    --muted: #7a9ab8;
+    --border: rgba(0,229,200,0.15);
+    --glow: 0 0 20px rgba(0,229,200,0.25);
+    --card-bg: rgba(10,25,41,0.9);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content:'';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(0,136,255,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 80%, rgba(0,229,200,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 80% 30% at 50% 50%, rgba(168,85,247,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 20s infinite alternate ease-in-out;
+  }
+  .orb1 { width:300px; height:300px; background:var(--accent); top:-100px; left:-100px; animation-duration:18s; }
+  .orb2 { width:200px; height:200px; background:var(--accent2); bottom:-50px; right:-50px; animation-duration:22s; animation-delay:-5s; }
+  .orb3 { width:150px; height:150px; background:var(--accent4); top:50%; left:60%; animation-duration:15s; animation-delay:-10s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(40px,30px) scale(1.1); }
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(0,229,200,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  header h1 span { color: var(--accent); font-style: italic; }
+  header p {
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: 15px;
+  }
+  .chapter-tag {
+    display: inline-block;
+    background: rgba(0,136,255,0.15);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-top: 16px;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main-layout {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 200px);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ─── SIDEBAR NAV ─── */
+  .sidebar {
+    padding: 30px 16px;
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .sidebar h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-left: 12px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .nav-item:hover { background: var(--panel); color: var(--text); border-color: var(--border); }
+  .nav-item.active {
+    background: rgba(0,229,200,0.1);
+    color: var(--accent);
+    border-color: rgba(0,229,200,0.3);
+  }
+  .nav-item .nav-icon { font-size: 16px; flex-shrink: 0; }
+  .nav-num {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    opacity: 0.5;
+  }
+
+  /* ─── CONTENT ─── */
+  .content {
+    padding: 40px 50px;
+    overflow-y: auto;
+  }
+
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    background: rgba(0,229,200,0.08);
+    border: 1px solid rgba(0,229,200,0.2);
+  }
+  .section-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .section-header .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* ─── CONTENT CARDS ─── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { border-color: rgba(0,229,200,0.3); box-shadow: var(--glow); }
+  .card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h3::before {
+    content:'';
+    width: 3px; height: 16px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .card p { color: var(--text); line-height: 1.75; margin-bottom: 10px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Key point pills */
+  .key-point {
+    background: rgba(0,229,200,0.08);
+    border: 1px solid rgba(0,229,200,0.25);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .key-point strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity:0.7; margin-bottom: 4px; }
+
+  .warn-point {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.25);
+    border-left: 3px solid var(--accent3);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    color: #ffb49a;
+    font-size: 14px;
+  }
+  .warn-point strong { color: var(--accent3); display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+
+  .info-point {
+    background: rgba(0,136,255,0.08);
+    border: 1px solid rgba(0,136,255,0.25);
+    border-left: 3px solid var(--accent2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    color: #a8c8ff;
+    font-size: 14px;
+  }
+  .info-point strong { color: var(--accent2); display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+
+  /* Stat grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .stat-card {
+    background: rgba(0,229,200,0.05);
+    border: 1px solid rgba(0,229,200,0.15);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--accent);
+    display: block;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* Step list */
+  .step-list { list-style: none; counter-reset: steps; }
+  .step-list li {
+    counter-increment: steps;
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .step-list li::before {
+    content: counter(steps);
+    min-width: 28px; height: 28px;
+    background: rgba(0,229,200,0.15);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .bullet-list { list-style: none; }
+  .bullet-list li {
+    padding: 6px 0 6px 20px;
+    position: relative;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .bullet-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  /* Tag chips */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(168,85,247,0.12);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: #c084fc;
+  }
+
+  /* 2-col grid */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ─── QUIZ SECTION ─── */
+  #quiz-section {
+    max-width: 800px;
+  }
+  .quiz-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .quiz-select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 12px 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .quiz-select:focus { outline: none; border-color: var(--accent); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #050d1a;
+  }
+  .btn-primary:hover { background: #00ffdf; box-shadow: 0 0 20px rgba(0,229,200,0.4); }
+  .btn-secondary {
+    background: rgba(0,136,255,0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(0,136,255,0.3);
+  }
+  .btn-secondary:hover { background: rgba(0,136,255,0.25); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .quiz-question-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+  }
+  .question-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .question-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .options-list { list-style: none; }
+  .option-btn {
+    width: 100%;
+    text-align: left;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent2); background: rgba(0,136,255,0.08); color: #fff; }
+  .option-btn.correct { background: rgba(0,229,200,0.15); border-color: var(--accent); color: var(--accent); }
+  .option-btn.wrong { background: rgba(255,107,53,0.12); border-color: var(--accent3); color: #ff9966; }
+  .option-btn:disabled { cursor: default; }
+  .option-label {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .explanation-box {
+    background: rgba(0,229,200,0.06);
+    border: 1px solid rgba(0,229,200,0.2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #b0d8d8;
+    display: none;
+  }
+  .explanation-box.show { display: block; }
+
+  .quiz-loading {
+    text-align: center;
+    padding: 50px 20px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(0,229,200,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .quiz-score {
+    background: rgba(0,229,200,0.08);
+    border: 1px solid rgba(0,229,200,0.25);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+  .score-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 4rem;
+    color: var(--accent);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* Molecule diagram - pure CSS art */
+  .cell-diagram {
+    position: relative;
+    height: 180px;
+    margin: 24px 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(0,20,40,0.6);
+    border: 1px solid var(--border);
+  }
+  .membrane-line {
+    position: absolute;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+    animation: pulse-line 3s infinite;
+  }
+  .membrane-line.top { top: 30%; }
+  .membrane-line.bot { top: 60%; }
+  @keyframes pulse-line { 0%,100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+
+  .dna-helix {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    opacity: 0.15;
+    animation: rotate3d 8s linear infinite;
+  }
+  @keyframes rotate3d { from { transform: translate(-50%,-50%) rotateY(0deg); } to { transform: translate(-50%,-50%) rotateY(360deg); } }
+
+  .floating-dots {
+    position: absolute;
+    inset: 0;
+  }
+  .dot {
+    position: absolute;
+    border-radius: 50%;
+    animation: float-dot linear infinite;
+  }
+  @keyframes float-dot {
+    from { transform: translateY(100%) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    to { transform: translateY(-100%) scale(1); opacity: 0; }
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,229,200,0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,229,200,0.4); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; gap: 4px; padding: 16px; flex-wrap: wrap; }
+    .content { padding: 24px 20px; }
+    .two-col { grid-template-columns: 1fr; }
+    .quiz-controls { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<header>
+  <div class="header-badge">🔬 Human Pathology · Study Guide</div>
+  <h1>The Cell as a Unit of<br><span>Health & Disease</span></h1>
+  <p>A comprehensive, interactive guide to understanding cell biology in the context of pathology — from genome to organelle.</p>
+  <div class="chapter-tag">// CHAPTER 1</div>
+</header>
+
+<div class="main-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h3>// Modules</h3>
+
+    <div class="nav-item active" onclick="showSection('genome')">
+      <span class="nav-icon">🧬</span> The Genome
+      <span class="nav-num">01</span>
+    </div>
+    <div class="nav-item" onclick="showSection('noncoding')">
+      <span class="nav-icon">🔗</span> Noncoding DNA
+      <span class="nav-num">02</span>
+    </div>
+    <div class="nav-item" onclick="showSection('histone')">
+      <span class="nav-icon">🪢</span> Histone & Epigenetics
+      <span class="nav-num">03</span>
+    </div>
+    <div class="nav-item" onclick="showSection('rna')">
+      <span class="nav-icon">⚗️</span> miRNA & lncRNA
+      <span class="nav-num">04</span>
+    </div>
+    <div class="nav-item" onclick="showSection('crispr')">
+      <span class="nav-icon">✂️</span> Gene Editing
+      <span class="nav-num">05</span>
+    </div>
+    <div class="nav-item" onclick="showSection('housekeeping')">
+      <span class="nav-icon">🏭</span> Cellular Housekeeping
+      <span class="nav-num">06</span>
+    </div>
+    <div class="nav-item" onclick="showSection('membrane')">
+      <span class="nav-icon">🔵</span> Plasma Membrane
+      <span class="nav-num">07</span>
+    </div>
+    <div class="nav-item" onclick="showSection('cytoskeleton')">
+      <span class="nav-icon">🕸️</span> Cytoskeleton
+      <span class="nav-num">08</span>
+    </div>
+    <div class="nav-item" onclick="showSection('junctions')">
+      <span class="nav-icon">🔗</span> Cell Junctions
+      <span class="nav-num">09</span>
+    </div>
+    <div class="nav-item" onclick="showSection('metabolism')">
+      <span class="nav-icon">⚡</span> Metabolism & Mito.
+      <span class="nav-num">10</span>
+    </div>
+    <div class="nav-item" onclick="showSection('signaling')">
+      <span class="nav-icon">📡</span> Cell Signaling
+      <span class="nav-num">11</span>
+    </div>
+    <div class="nav-item" onclick="showSection('growth')">
+      <span class="nav-icon">🌱</span> Growth Factors
+      <span class="nav-num">12</span>
+    </div>
+    <div class="nav-item" onclick="showSection('quiz')">
+      <span class="nav-icon">🎯</span> Quiz Generator
+      <span class="nav-num">★</span>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- ═══ 01: GENOME ═══ -->
+    <section id="genome" class="section active">
+      <div class="section-header">
+        <div class="section-icon">🧬</div>
+        <div>
+          <h2>The Genome</h2>
+          <div class="subtitle">// Module 01 · Foundation of Pathology</div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><span class="stat-val">3.2B</span><div class="stat-label">Base Pairs in Human Genome</div></div>
+        <div class="stat-card"><span class="stat-val">~20,000</span><div class="stat-label">Protein-Coding Genes</div></div>
+        <div class="stat-card"><span class="stat-val">1.5%</span><div class="stat-label">Genome That Codes Protein</div></div>
+        <div class="stat-card"><span class="stat-val">85%</span><div class="stat-label">Genome Transcribed to RNA</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Why Cells Matter in Pathology</h3>
+        <p>Pathology literally means the <em>study of suffering</em> (Greek: <em>pathos</em> = suffering, <em>logos</em> = study). Virchow correctly stated that disease originates at the cellular level — disturbances in cells arise from alterations in molecules (genes, proteins, and other molecules).</p>
+        <div class="key-point">
+          <strong>🔑 Core Principle</strong>
+          Understanding the <strong>cellular and molecular abnormalities</strong> that give rise to disease is the foundation of modern pathology.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Sequencing the Human Genome</h3>
+        <p>The sequencing of the human genome at the beginning of the 21st century was a landmark achievement. It allowed us to analyze vast amounts of data about health and disease. Key revelations include:</p>
+        <ul class="step-list">
+          <li>Humans have only ~20,000 protein-coding genes — far fewer than expected.</li>
+          <li>With genomes 30-fold smaller, we are assembled from roughly 20,000 proteins.</li>
+          <li>Most of these proteins are recognizable across many organisms — what separates us from worms is how the genes are assembled and regulated.</li>
+          <li>More than 1/3 of the human genome is made of "jumping genes" (transposons).</li>
+        </ul>
+        <div class="info-point">
+          <strong>📌 Key Insight</strong>
+          The genome codes for about 20,000 proteins, yet more than 85% of the human genome is transcribed into RNA — meaning vast amounts of RNA have roles beyond protein coding.
+        </div>
+      </div>
+
+      <div class="cell-diagram">
+        <div class="dna-helix">🧬</div>
+        <div class="membrane-line top"></div>
+        <div class="membrane-line bot"></div>
+        <div class="floating-dots" id="floatingDots"></div>
+      </div>
+    </section>
+
+    <!-- ═══ 02: NONCODING DNA ═══ -->
+    <section id="noncoding" class="section">
+      <div class="section-header">
+        <div class="section-icon">🔗</div>
+        <div>
+          <h2>Noncoding DNA</h2>
+          <div class="subtitle">// Module 02 · Regulation Beyond Genes</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>What Is Noncoding DNA?</h3>
+        <p>Only about 1.5% of our DNA directly codes for proteins. The remaining ~98.5% was once dismissed as "junk DNA" but is now known to be functionally critical for regulating gene expression and maintaining chromosome structure.</p>
+        <div class="tags">
+          <span class="tag">Promoters</span><span class="tag">Enhancers</span><span class="tag">Introns</span><span class="tag">5'-UTR</span><span class="tag">3'-UTR</span><span class="tag">Telomeres</span><span class="tag">Centromeres</span>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>SNPs — Single Nucleotide Polymorphisms</h3>
+          <p>SNPs are single nucleotide variations at a given position in the genome. Key facts:</p>
+          <ul class="bullet-list">
+            <li>Occur every 300 base pairs on average</li>
+            <li>99.9% identical between two people</li>
+            <li>More than 6 million human SNPs identified</li>
+            <li>Can be in coding or regulatory regions</li>
+            <li>Most SNPs are "neutral" variants</li>
+          </ul>
+          <div class="info-point">
+            <strong>⚠️ Important</strong>
+            SNPs don't "explain" disease inheritance alone — they identify risk, not cause.
+          </div>
+        </div>
+        <div class="card">
+          <h3>CNVs — Copy Number Variations</h3>
+          <p>CNVs are segments of DNA (1,000–1,000,000+ base pairs) that are deleted, duplicated, or rearranged:</p>
+          <ul class="bullet-list">
+            <li>Can be simple duplications or complex rearrangements</li>
+            <li>Responsible for millions of base pairs of sequence difference between individuals</li>
+            <li>Approximately 50% of CNVs involve gene-coding sequences</li>
+            <li>A large proportion of human phenotypic diversity is CNV-based</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Structure of a Gene (Key Anatomy)</h3>
+        <ul class="step-list">
+          <li><strong>Promoter</strong> — Upstream region where RNA polymerase binds to start transcription</li>
+          <li><strong>Exons</strong> — Protein-coding sequences that are retained in mature mRNA</li>
+          <li><strong>Introns</strong> — Non-coding sequences spliced out of pre-mRNA</li>
+          <li><strong>5'-UTR</strong> — Untranslated region; regulates translation efficiency</li>
+          <li><strong>3'-UTR</strong> — Untranslated region; important for mRNA stability and miRNA binding</li>
+          <li><strong>Open Reading Frame (ORF)</strong> — Sequence translated into protein</li>
+        </ul>
+      </div>
+
+      <div class="warn-point">
+        <strong>🚨 Clinical Link</strong>
+        Alterations in DNA sequence (SNPs, CNVs) cannot by themselves explain phenotypic differences or classic Mendelian genetic traits — epigenetic changes must also be considered.
+      </div>
+    </section>
+
+    <!-- ═══ 03: HISTONE ═══ -->
+    <section id="histone" class="section">
+      <div class="section-header">
+        <div class="section-icon">🪢</div>
+        <div>
+          <h2>Histone Organization & Epigenetics</h2>
+          <div class="subtitle">// Module 03 · Chromatin Remodeling</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Chromatin: DNA Packaging</h3>
+        <p>DNA doesn't float freely — it's wound around proteins called <strong>histones</strong>. This complex is called <em>chromatin</em>.</p>
+        <div class="stat-grid">
+          <div class="stat-card"><span class="stat-val">147</span><div class="stat-label">Base Pairs per Nucleosome</div></div>
+          <div class="stat-card"><span class="stat-val">8</span><div class="stat-label">Histone Proteins (H2A, H2B, H3, H4 ×2)</div></div>
+        </div>
+        <p>Nucleosomes are octamers of histone proteins. DNA wraps around these beads, and the entire structure is joined by short linker DNA and a linker histone (H1).</p>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Heterochromatin (Inactive)</h3>
+          <p>Densely packed, transcriptionally <em>inactive</em> chromatin. Genes within are silenced. Associated with:</p>
+          <ul class="bullet-list">
+            <li>DNA methylation</li>
+            <li>Histone deacetylation</li>
+            <li>Gene silencing</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Euchromatin (Active)</h3>
+          <p>Dispersed, transcriptionally <em>active</em> chromatin. Genes within are expressed. Associated with:</p>
+          <ul class="bullet-list">
+            <li>Histone acetylation</li>
+            <li>Histone methylation (at specific residues)</li>
+            <li>DNA accessibility for RNA polymerase</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Epigenetic Modifications — How Gene Expression Is Controlled</h3>
+        <p>Cell-type-specific differences in gene expression are regulated by <strong>epigenetic modifications</strong> — changes that don't alter DNA sequence but control whether genes are on or off:</p>
+        <ul class="step-list">
+          <li><strong>DNA Methylation</strong> — Methyl groups added to cytosines; generally condenses chromatin and <em>silences</em> gene expression. Associated with transcriptional inactivation.</li>
+          <li><strong>Histone Acetylation</strong> — Loosens chromatin, promotes transcription (gene <em>activation</em>).</li>
+          <li><strong>Histone Methylation</strong> — Effect depends on which residue is methylated; can activate or repress.</li>
+          <li><strong>Histone Phosphorylation</strong> — Can influence chromatin structure and DNA repair responses.</li>
+        </ul>
+        <div class="key-point">
+          <strong>🔑 Clinical Significance</strong>
+          Epigenetic modifications are <strong>reversible</strong> — this is why HDAC inhibitors and demethylating agents are used as cancer therapy. Epigenetic drugs are already used in treatment of several forms of cancer.
+        </div>
+      </div>
+
+      <div class="warn-point">
+        <strong>⚠️ Disease Link</strong>
+        Disruption of epigenetic marks (mutations in histone-modifying enzymes) is a hallmark of many cancers and developmental disorders. DNA methylation of specific genes can silence tumor suppressors.
+      </div>
+    </section>
+
+    <!-- ═══ 04: miRNA / lncRNA ═══ -->
+    <section id="rna" class="section">
+      <div class="section-header">
+        <div class="section-icon">⚗️</div>
+        <div>
+          <h2>miRNA & Long Noncoding RNA</h2>
+          <div class="subtitle">// Module 04 · RNA-Based Gene Regulation</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>MicroRNAs (miRNA)</h3>
+          <p>Short RNA sequences (~22 nucleotides) that function as <em>post-transcriptional regulators</em>:</p>
+          <ul class="bullet-list">
+            <li>Encoded by ~1,000 miRNA genes in humans</li>
+            <li>Transcribed as pre-miRNA, processed by <strong>Dicer</strong> into miRNA (~22 nt)</li>
+            <li>Bind RISC complex → bind to complementary 3'-UTR of target mRNAs</li>
+            <li>Result: mRNA <strong>cleavage</strong> (perfect match) or <strong>translation repression</strong> (imperfect match)</li>
+            <li>One miRNA can regulate hundreds of mRNAs</li>
+          </ul>
+          <div class="key-point">
+            <strong>🔑 Key Fact</strong>
+            miRNA regulation of gene expression is a fundamental and critical mechanism present in ALL eukaryotes.
+          </div>
+        </div>
+        <div class="card">
+          <h3>Long Noncoding RNAs (lncRNA)</h3>
+          <p>>200 nucleotides in length. Functions:</p>
+          <ul class="bullet-list">
+            <li>Gene activation (binding transcription factor complexes)</li>
+            <li>Gene suppression (acting as decoy RNA)</li>
+            <li>Promoting chromatin modification (methylation/acetylation)</li>
+            <li>Serving as scaffold for secondary protein complexes</li>
+            <li>Assembly of multisubunit complexes</li>
+          </ul>
+          <div class="info-point">
+            <strong>📌 Notable Example</strong>
+            <strong>XIST</strong> — the lncRNA responsible for X chromosome inactivation in females. XIST escapes X inactivation and acts in gene silencing on the same chromosome.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>miRNA Mechanism: Step by Step</h3>
+        <ul class="step-list">
+          <li>miRNA gene is <strong>transcribed</strong> in the nucleus → forms primary miRNA (pri-miRNA)</li>
+          <li>Pri-miRNA is processed within the nucleus → forms pre-miRNA (~70 nt hairpin)</li>
+          <li>Pre-miRNA is <strong>exported</strong> to the cytoplasm via export proteins</li>
+          <li>Cytoplasmic enzyme <strong>Dicer</strong> cuts the pre-miRNA → mature double-stranded miRNA (~22 nt)</li>
+          <li>miRNA is incorporated into the <strong>RISC complex</strong> (RNA-Induced Silencing Complex)</li>
+          <li>RISC + miRNA binds to target mRNA → silences gene expression</li>
+        </ul>
+        <div class="warn-point">
+          <strong>🚨 Disease Relevance</strong>
+          miRNAs can function as oncogenes or tumor suppressors. Dysregulation is involved in atherosclerosis, cancer, and developmental disorders. miRNA-based tools are being explored as diagnostics and therapeutics.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 05: CRISPR ═══ -->
+    <section id="crispr" class="section">
+      <div class="section-header">
+        <div class="section-icon">✂️</div>
+        <div>
+          <h2>Gene Editing (CRISPR-Cas9)</h2>
+          <div class="subtitle">// Module 05 · Molecular Revolution</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>What Is CRISPR-Cas9?</h3>
+        <p>CRISPR (Clustered Regularly Interspaced Short Palindromic Repeats) with Cas9 nuclease is a revolutionary gene-editing system adapted from <strong>bacterial immune defense mechanisms</strong> against bacteriophages (viruses that infect bacteria).</p>
+        <div class="key-point">
+          <strong>🔑 Origin</strong>
+          Bacteria use CRISPR to sample the DNA of infecting agents, incorporating it into the host genome. CRISPRs are transcribed and processed into RNA that guides Cas9 to cleave viral DNA on re-exposure.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>How CRISPR-Cas9 Works</h3>
+        <ul class="step-list">
+          <li>Scientists design an artificial <strong>guide RNA (gRNA)</strong> complementary to a target DNA sequence</li>
+          <li>gRNA binds to Cas9 nuclease and directs it to the exact genomic location</li>
+          <li>Cas9 introduces a <strong>double-stranded DNA break</strong> at the target site</li>
+          <li>The cell repairs the break → insertions or deletions (gene knockout) OR</li>
+          <li>A donor DNA template is provided → <strong>precise gene correction</strong> via homologous recombination</li>
+        </ul>
+        <div class="info-point">
+          <strong>📌 Real Beauty of CRISPR</strong>
+          Entire genomes can be delivered using a single easy-to-make plasmid — compared to previous tools like NHEJ (harder) and ZFN (expensive and less precise).
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Applications</h3>
+          <ul class="bullet-list">
+            <li>Inserting specific sequences into genomes</li>
+            <li>Correcting mutations causing hereditary disease</li>
+            <li>Rapidly generating transgenic animals</li>
+            <li>Other rapidly advancing gene therapies</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Limitations & Ethics</h3>
+          <ul class="bullet-list">
+            <li>Off-target cuts remain a concern</li>
+            <li>Germline editing is deeply controversial</li>
+            <li>Delivery to target tissues is challenging</li>
+            <li>Justice concerns around access</li>
+          </ul>
+        </div>
+      </div>
+      <div class="warn-point">
+        <strong>⚠️ Ethical Debate</strong>
+        CRISPR's ability to precisely edit the human germline — correcting heritable disease or potentially introducing "desirable" traits — has ignited vigorous ethical debate in the scientific and public sphere.
+      </div>
+    </section>
+
+    <!-- ═══ 06: HOUSEKEEPING ═══ -->
+    <section id="housekeeping" class="section">
+      <div class="section-header">
+        <div class="section-icon">🏭</div>
+        <div>
+          <h2>Cellular Housekeeping</h2>
+          <div class="subtitle">// Module 06 · Organelle Function</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Compartmentalization</h3>
+        <p>Normal housekeeping functions are <strong>compartmentalized within membrane-bound intracellular organelles</strong> (the "little organs" of the cell). This allows potentially destructive enzymes or reactive metabolites to be concentrated without risking damage to other cellular constituents.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px">
+        <div class="card">
+          <h3>🟦 Rough ER (RER)</h3>
+          <p>Ribosomes stud its surface. Functions:</p>
+          <ul class="bullet-list">
+            <li>Synthesis of secreted proteins</li>
+            <li>Synthesis of membrane proteins</li>
+            <li>Initial glycosylation of proteins</li>
+            <li>Disulfide bond formation</li>
+          </ul>
+          <div class="key-point" style="font-size:12px">
+            <strong>⚠️ Pathology</strong>
+            ER stress → unfolded protein response (UPR) → if unresolved, triggers apoptosis.
+          </div>
+        </div>
+        <div class="card">
+          <h3>🟨 Golgi Apparatus</h3>
+          <p>The cell's "post office." Functions:</p>
+          <ul class="bullet-list">
+            <li>Protein modification (glycosylation)</li>
+            <li>Sorting and packaging proteins</li>
+            <li>Directing proteins to destinations (secretion, lysosomes, plasma membrane)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🔴 Lysosomes</h3>
+          <p>Contain ~40 hydrolytic enzymes. Functions at <strong>acidic pH (≈4.5–5)</strong>:</p>
+          <ul class="bullet-list">
+            <li>Digest macromolecules, old organelles, engulfed microbes</li>
+            <li>Intracellular digestion (heterophagy — external material)</li>
+            <li>Autophagy — degrading the cell's own components</li>
+          </ul>
+          <div class="warn-point" style="font-size:12px">
+            <strong>Disease</strong> Lysosomal storage diseases (e.g., Gaucher's, Tay-Sachs) result from enzyme deficiencies.
+          </div>
+        </div>
+        <div class="card">
+          <h3>🟣 Proteasomes</h3>
+          <p>Cytosolic "disposal complexes." Functions:</p>
+          <ul class="bullet-list">
+            <li>Degrade misfolded or damaged proteins</li>
+            <li>Target proteins tagged with ubiquitin chains</li>
+            <li>Regulation of transcription factors (e.g., p53)</li>
+          </ul>
+          <div class="info-point" style="font-size:12px">
+            <strong>Clinical Link</strong> Proteasome inhibitors (e.g., bortezomib) are used in cancer treatment.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Autophagy vs. Heterophagy</h3>
+        <ul class="step-list">
+          <li><strong>Autophagy (Self-eating)</strong>: Lysosomes fuse with autophagosomes to degrade the cell's own worn-out organelles. Important for cellular survival during starvation.</li>
+          <li><strong>Heterophagy</strong>: Lysosomes fuse with phagosomes containing engulfed external material (e.g., bacteria, cellular debris).</li>
+          <li><strong>Residual bodies</strong>: Indigestible material accumulates as lipofuscin pigment — a hallmark of aging cells.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══ 07: MEMBRANE ═══ -->
+    <section id="membrane" class="section">
+      <div class="section-header">
+        <div class="section-icon">🔵</div>
+        <div>
+          <h2>Plasma Membrane</h2>
+          <div class="subtitle">// Module 07 · Protection & Transport</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Structure of the Plasma Membrane</h3>
+        <p>Plasma membranes are <strong>fluid bilayers</strong> of amphipathic phospholipids with hydrophilic head groups and hydrophobic tails. Key features:</p>
+        <ul class="bullet-list">
+          <li>Cholesterol — provides mechanical stability and regulates fluidity</li>
+          <li>Glycolipids and glycoproteins — form the extracellular "sugar coat" (glycocalyx)</li>
+          <li>Lipid-linked proteins — anchored to outer or inner leaflet (e.g., via GPI anchors)</li>
+          <li>Transmembrane proteins — span the bilayer; carry out most membrane functions</li>
+        </ul>
+        <div class="key-point">
+          <strong>🔑 Asymmetry</strong>
+          Membrane lipids are distributed asymmetrically. Phosphatidylserine (normally inner leaflet) flipping to the outer surface signals apoptosis and activates clotting.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>How Molecules Cross the Membrane</h3>
+        <ul class="step-list">
+          <li><strong>Passive Diffusion</strong>: Small nonpolar molecules (O₂, CO₂, steroid hormones) cross freely. No energy needed.</li>
+          <li><strong>Channel Proteins</strong>: Create hydrophilic pores — restricted by size and charge (e.g., aquaporins, ion channels). Rapid transport.</li>
+          <li><strong>Carrier Proteins</strong>: Bind specific substances and undergo conformational changes; slower but more selective.</li>
+          <li><strong>Endocytosis</strong>: Cell engulfs large molecules or particles into vesicles.</li>
+          <li><strong>Exocytosis</strong>: Vesicles fuse with the plasma membrane to release contents extracellularly.</li>
+        </ul>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Clathrin-Mediated Endocytosis</h3>
+          <p>Receptor-ligand complexes are internalized via <strong>clathrin-coated pits</strong>. Used for:</p>
+          <ul class="bullet-list">
+            <li>LDL receptor uptake (defective in hypercholesterolemia)</li>
+            <li>Iron-transferrin uptake</li>
+            <li>Growth factor internalization</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Transcytosis</h3>
+          <p>Material is transported across epithelial cells — from one side to the other — via vesicles. Important for:</p>
+          <ul class="bullet-list">
+            <li>IgG transport across placenta</li>
+            <li>Antibody transfer in breast milk</li>
+            <li>Drug delivery across the blood-brain barrier</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 08: CYTOSKELETON ═══ -->
+    <section id="cytoskeleton" class="section">
+      <div class="section-header">
+        <div class="section-icon">🕸️</div>
+        <div>
+          <h2>Cytoskeleton</h2>
+          <div class="subtitle">// Module 08 · Structural Framework</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Three Major Cytoskeletal Proteins</h3>
+        <p>The cytoskeleton allows cells to maintain shape, move organelles, divide, and migrate. Three major classes:</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px">
+        <div class="card">
+          <h3>Actin Filaments</h3>
+          <ul class="bullet-list">
+            <li>5–9 nm thin filaments</li>
+            <li>Formed from globular actin (G-actin)</li>
+            <li>Control cell shape & movement</li>
+            <li>Form the contractile apparatus with myosin</li>
+            <li>Present at microvilli (surface projections)</li>
+          </ul>
+          <div class="tag" style="margin-top:8px">Motor: Myosin</div>
+        </div>
+        <div class="card">
+          <h3>Intermediate Filaments</h3>
+          <ul class="bullet-list">
+            <li>8–10 nm diameter</li>
+            <li>Stable, non-dynamic</li>
+            <li>Provide structural support</li>
+            <li>Types: Keratins (epithelial), Vimentin (mesenchymal), Desmin (muscle), Neurofilaments (neurons)</li>
+          </ul>
+          <div class="key-point" style="font-size:12px">
+            <strong>Clinical Use</strong>
+            Keratin expression patterns are used as histochemical markers to identify cell lineage in tumors.
+          </div>
+        </div>
+        <div class="card">
+          <h3>Microtubules</h3>
+          <ul class="bullet-list">
+            <li>25 nm hollow tubes</li>
+            <li>Made of α-β tubulin dimers</li>
+            <li>Organize organelle position</li>
+            <li>Form mitotic spindle for cell division</li>
+            <li>Direct vesicle transport along cell</li>
+          </ul>
+          <div class="warn-point" style="font-size:12px">
+            <strong>Drug Target</strong>
+            Taxol and Vinca alkaloids (anticancer drugs) target microtubule polymerization/depolymerization.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Cell-Matrix & Cell-Cell Adhesions</h3>
+        <ul class="step-list">
+          <li><strong>Focal adhesions</strong> — Link actin cytoskeleton to the extracellular matrix (ECM) via integrins</li>
+          <li><strong>Desmosomes</strong> — Link intermediate filaments between adjacent epithelial cells; provide mechanical strength</li>
+          <li><strong>Hemidesmosomes</strong> — Link intermediate filaments to the basement membrane (basal lamina)</li>
+          <li><strong>Gap junctions</strong> — Connexin channels that allow ion/small molecule transfer between cells</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══ 09: JUNCTIONS ═══ -->
+    <section id="junctions" class="section">
+      <div class="section-header">
+        <div class="section-icon">🔗</div>
+        <div>
+          <h2>Cell-Cell Junctions & Communication</h2>
+          <div class="subtitle">// Module 09 · Social Cells</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Three Major Junction Types</h3>
+        <p>Cells interact and communicate through junctions that provide mechanical links and enable recognition of ligands and extracellular molecules:</p>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>🚫 Tight Junctions (Occluding)</h3>
+          <p>Seal adjacent cells to form a <strong>continuous barrier</strong> restricting paracellular movement of ions and molecules. They:</p>
+          <ul class="bullet-list">
+            <li>Maintain epithelial polarity (apical vs basolateral)</li>
+            <li>Are formed by claudins and occludins (multiprotein complexes)</li>
+            <li>Are a high-resistance barrier to solute movement</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>⚓ Anchoring Junctions (Desmosomes)</h3>
+          <p>Mechanically attach cells and connect cytoskeletons. Types:</p>
+          <ul class="bullet-list">
+            <li><strong>Spot desmosomes</strong> — link intermediate filaments between cells; small and rivet-like</li>
+            <li><strong>Belt desmosomes (adherens)</strong> — link actin filaments; run around cell perimeter</li>
+            <li><strong>Hemidesmosomes</strong> — link cells to basal lamina</li>
+            <li><strong>Focal adhesions</strong> — link actin to ECM via integrins</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ Gap Junctions</h3>
+        <p>Gap junctions mediate the <strong>passage of chemical and electrical signals</strong> between cells. Made of connexins (transmembrane proteins). They:</p>
+        <ul class="bullet-list">
+          <li>Allow ions, small metabolites, and vitamins to pass directly</li>
+          <li>Allow calcium fluxes through myocardium (cardiac muscle = functional syncytium)</li>
+          <li>Range: 1.5–2 nm in diameter transmembrane channels</li>
+        </ul>
+        <div class="key-point">
+          <strong>🔑 Pathology</strong>
+          Loss of gap junction proteins is associated with certain inherited disorders, cardiac arrhythmias, and deafness.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Extracellular Matrix (ECM)</h3>
+        <p>The ECM is a network of proteins and polysaccharides filling extracellular space. Major components:</p>
+        <ul class="step-list">
+          <li><strong>Collagen</strong> — Most abundant protein in the body; provides tensile strength</li>
+          <li><strong>Laminin</strong> — Cross-shaped glycoprotein; major component of basement membrane</li>
+          <li><strong>Fibronectin</strong> — Connects cells to matrix; important in wound healing</li>
+          <li><strong>Proteoglycans</strong> — Hydrophilic core proteins; create a "gel" that resists compression</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══ 10: METABOLISM ═══ -->
+    <section id="metabolism" class="section">
+      <div class="section-header">
+        <div class="section-icon">⚡</div>
+        <div>
+          <h2>Cellular Metabolism & Mitochondria</h2>
+          <div class="subtitle">// Module 10 · Energy, Life & Death</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>The Mitochondrion: A Cell Within a Cell</h3>
+        <p>Mitochondria evolved from ancestral symbiotic bacteria — which is why they have their own <strong>circular DNA (mtDNA)</strong>, ribosomes, and double membrane. Key facts:</p>
+        <div class="stat-grid">
+          <div class="stat-card"><span class="stat-val">37</span><div class="stat-label">Genes in mtDNA</div></div>
+          <div class="stat-card"><span class="stat-val">~1%</span><div class="stat-label">of total cellular protein</div></div>
+          <div class="stat-card"><span class="stat-val">1700</span><div class="stat-label">Mitochondria per Hepatocyte</div></div>
+        </div>
+        <div class="key-point">
+          <strong>🔑 Maternal Inheritance</strong>
+          mtDNA is inherited almost entirely maternally. Mitochondrial diseases can be X-linked, autosomal, or maternally inherited.
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>ATP Generation</h3>
+          <ul class="bullet-list">
+            <li>Main site: inner mitochondrial membrane</li>
+            <li>Oxidative phosphorylation (OXPHOS) — electron transport chain + ATP synthase</li>
+            <li>Glucose → pyruvate → acetyl-CoA → TCA cycle → NADH/FADH₂ → ETC → ATP</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Non-ATP Roles</h3>
+          <ul class="bullet-list">
+            <li>Intermediary metabolism (TCA intermediates)</li>
+            <li>Synthesis of certain macromolecules</li>
+            <li>Generation of reactive oxygen species (ROS)</li>
+            <li>Regulation of intracellular calcium</li>
+            <li><strong>Cell death decisions</strong> (apoptosis)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚠️ Warburg Effect — Cancer Metabolism</h3>
+        <p>Rapidly growing cancer cells preferentially use <strong>aerobic glycolysis</strong> (glucose → lactic acid) even in the presence of oxygen — this is called the <em>Warburg Effect</em>:</p>
+        <ul class="bullet-list">
+          <li>Less efficient for ATP but provides biosynthetic precursors</li>
+          <li>Glutamine is also consumed to provide acetyl-CoA (lipids) and nucleotides</li>
+          <li>Basis for <sup>18</sup>F-FDG PET scanning in oncology (cancer cells consume more glucose)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Mitochondria and Cell Death</h3>
+        <p>Mitochondria are <strong>central regulators of apoptosis</strong> (programmed cell death):</p>
+        <ul class="step-list">
+          <li>Injury signals → mitochondrial permeability transition (membrane pores open)</li>
+          <li>Cytochrome C is released from the intermembrane space into the cytosol</li>
+          <li>Cytochrome C activates the <strong>apoptosome</strong> → activates caspases</li>
+          <li>Caspases execute cellular self-destruction — DNA fragmentation, membrane blebbing</li>
+        </ul>
+        <div class="warn-point">
+          <strong>🚨 Clinical Relevance</strong>
+          BCL-2 family proteins govern the decision to release cytochrome C. BCL-2 is anti-apoptotic; BAX/BAK are pro-apoptotic. Many cancers overexpress BCL-2 to evade cell death.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 11: SIGNALING ═══ -->
+    <section id="signaling" class="section">
+      <div class="section-header">
+        <div class="section-icon">📡</div>
+        <div>
+          <h2>Cellular Activation & Signal Transduction</h2>
+          <div class="subtitle">// Module 11 · Communication Systems</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Types of Cell Signaling by Distance</h3>
+        <ul class="step-list">
+          <li><strong>Autocrine</strong> — A cell responds to signals it secretes itself (e.g., tumors stimulate their own growth)</li>
+          <li><strong>Paracrine</strong> — A cell affects nearby cells via secreted factors diffusing short distances (e.g., nitric oxide from endothelium → smooth muscle relaxation)</li>
+          <li><strong>Synaptic</strong> — Activated neurons release neurotransmitters at a synapse</li>
+          <li><strong>Endocrine</strong> — Hormones are released into blood and act on distant target organs</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Signal Transduction: From Receptor to Nucleus</h3>
+        <p>Regardless of the signal type, it is transmitted via a receptor and initiates a cascade of intracellular events. Main receptor classes:</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px">
+          <div class="info-point">
+            <strong>1. Cell Surface Receptors</strong>
+            Most hydrophilic ligands bind here. Three types: (1) Ion channel-coupled, (2) G-protein coupled (GPCRs), (3) Enzyme-linked (e.g., tyrosine kinase receptors).
+          </div>
+          <div class="info-point">
+            <strong>2. Intracellular Receptors</strong>
+            Lipid-soluble ligands (e.g., steroid hormones, thyroid hormone) diffuse into cell → bind nuclear receptors → directly regulate transcription.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔑 Key Signaling Pathways</h3>
+        <ul class="step-list">
+          <li><strong>RAS/MAPK Pathway</strong>: Growth factor → receptor tyrosine kinase → RAS (activated by GTP exchange) → RAF → MEK → ERK → nucleus → gene expression (cell proliferation). <em>RAS is mutated in ~30% of human cancers.</em></li>
+          <li><strong>PI3K/AKT/mTOR Pathway</strong>: Growth factor → PI3K → PIP3 → AKT → mTOR → protein synthesis, cell survival. <em>PTEN tumor suppressor inhibits this pathway.</em></li>
+          <li><strong>Notch Pathway</strong>: Ligand (Delta/Jagged) on one cell binds Notch receptor on adjacent cell → releases intracellular domain → transcription factor → development and differentiation.</li>
+          <li><strong>Wnt/β-Catenin</strong>: Wnt ligand inhibits degradation of β-catenin → β-catenin enters nucleus → transcription of proliferative genes. <em>Critical in colon cancer.</em></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Adaptor Proteins & Signal Amplification</h3>
+        <p>Adaptor proteins have multiple domains (SH2, SH3) that mediate protein-protein interactions — they are the "connectors" of signaling cascades. Key concept:</p>
+        <div class="key-point">
+          <strong>🔑 Signal Amplification</strong>
+          One receptor activation event can trigger phosphorylation of many downstream proteins → exponential amplification of the initial signal through cascades of kinase activity.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 12: GROWTH FACTORS ═══ -->
+    <section id="growth" class="section">
+      <div class="section-header">
+        <div class="section-icon">🌱</div>
+        <div>
+          <h2>Growth Factors & Receptors</h2>
+          <div class="subtitle">// Module 12 · Proliferation & Repair</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>What Are Growth Factors?</h3>
+        <p>Growth factors stimulate the survival and proliferation of particular cells, as well as differentiation, migration, and other cell activities. They bind to specific cell surface receptors and influence the cell cycle.</p>
+        <div class="key-point">
+          <strong>🔑 Important Principle</strong>
+          Growth factors don't just cause proliferation — they can also promote entry into the cell cycle, enhance biosynthesis of cellular components, and enhance survival. Some are "competence" factors; others are "progression" factors.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Major Growth Factors in Regeneration & Repair</h3>
+        <div style="overflow-x:auto">
+          <table style="width:100%; border-collapse:collapse; font-size:13px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left; padding:10px; color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:11px">GROWTH FACTOR</th>
+                <th style="text-align:left; padding:10px; color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:11px">SOURCES</th>
+                <th style="text-align:left; padding:10px; color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:11px">MAIN FUNCTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:10px; color:#fff; font-weight:600">EGF / TGF-α</td>
+                <td style="padding:10px; color:var(--muted)">Macrophages, epithelial cells</td>
+                <td style="padding:10px; color:var(--text)">Mitogenic for epithelial cells, hepatocytes, fibroblasts</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:10px; color:#fff; font-weight:600">HGF (Hepatocyte GF)</td>
+                <td style="padding:10px; color:var(--muted)">Fibroblasts, liver stromal cells</td>
+                <td style="padding:10px; color:var(--text)">Hepatocyte proliferation; promotes epithelial growth & migration</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:10px; color:#fff; font-weight:600">VEGF</td>
+                <td style="padding:10px; color:var(--muted)">Mesenchymal cells</td>
+                <td style="padding:10px; color:var(--text)">Angiogenesis; increases vascular permeability; critical in tumors</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:10px; color:#fff; font-weight:600">PDGF</td>
+                <td style="padding:10px; color:var(--muted)">Platelets, macrophages, endothelium</td>
+                <td style="padding:10px; color:var(--text)">Fibroblast migration/proliferation; smooth muscle activation</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:10px; color:#fff; font-weight:600">FGF (1, 2, 7)</td>
+                <td style="padding:10px; color:var(--muted)">Macrophages, mast cells, endothelium</td>
+                <td style="padding:10px; color:var(--text)">Angiogenesis; wound healing; keratinocyte growth (KGF=FGF7)</td>
+              </tr>
+              <tr>
+                <td style="padding:10px; color:#fff; font-weight:600">TGF-β</td>
+                <td style="padding:10px; color:var(--muted)">T lymphocytes, macrophages, platelets</td>
+                <td style="padding:10px; color:var(--text)">Fibroblast/smooth muscle stimulation; ECM synthesis; immunosuppression</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Receptor Tyrosine Kinases</h3>
+          <p>EGF receptor (EGFR/ERBB2) family are the most important RTKs. ERBB2 is highly amplified in a subset of breast cancers — targeted by trastuzumab (Herceptin).</p>
+          <ul class="bullet-list">
+            <li>Ligand binding → dimerization → autophosphorylation</li>
+            <li>Downstream: RAS, PI3K, MAPK pathways</li>
+            <li>Gain-of-function mutations: proto-oncogenes → oncogenes</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Transcription Factors</h3>
+          <p>The ultimate targets of signaling cascades. They bind DNA and regulate gene expression. Most signal transduction pathways ultimately influence cellular gene expression. Key TFs:</p>
+          <ul class="bullet-list">
+            <li>MYC — proliferation (amplified in many cancers)</li>
+            <li>p53 — tumor suppressor; "guardian of the genome"</li>
+            <li>NF-κB — inflammation and immunity</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-point">
+        <strong>🚨 Oncogene vs. Tumor Suppressor</strong>
+        Gain-of-function mutations in growth factor genes or receptors create proto-oncogenes → oncogenes (cancer-promoting). Loss-of-function mutations in negative regulators eliminate tumor suppression.
+      </div>
+    </section>
+
+    <!-- ═══ QUIZ SECTION ═══ -->
+    <section id="quiz" class="section">
+      <div class="section-header">
+        <div class="section-icon">🎯</div>
+        <div>
+          <h2>Quiz Generator</h2>
+          <div class="subtitle">// AI-Powered · Test Your Knowledge</div>
+        </div>
+      </div>
+
+      <div id="quiz-section">
+        <div class="card">
+          <h3>Configure Your Quiz</h3>
+          <p style="color:var(--muted); margin-bottom:20px; font-size:13px">Select a topic and difficulty, then generate AI-powered quiz questions tailored to your study session.</p>
+
+          <div class="quiz-controls">
+            <div>
+              <label style="font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:1px; display:block; margin-bottom:6px">TOPIC</label>
+              <select id="quizTopic" class="quiz-select">
+                <option value="all">All Topics (Random Mix)</option>
+                <option value="genome">The Genome & Noncoding DNA</option>
+                <option value="epigenetics">Histones & Epigenetics</option>
+                <option value="rna">miRNA & lncRNA</option>
+                <option value="crispr">Gene Editing (CRISPR)</option>
+                <option value="organelles">Cellular Housekeeping & Organelles</option>
+                <option value="membrane">Plasma Membrane & Transport</option>
+                <option value="cytoskeleton">Cytoskeleton & Junctions</option>
+                <option value="metabolism">Metabolism & Mitochondria</option>
+                <option value="signaling">Cell Signaling & Transduction</option>
+                <option value="growth">Growth Factors & Receptors</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:1px; display:block; margin-bottom:6px">DIFFICULTY</label>
+              <select id="quizDifficulty" class="quiz-select">
+                <option value="basic">Basic (Definitions & Facts)</option>
+                <option value="intermediate" selected>Intermediate (Mechanisms)</option>
+                <option value="advanced">Advanced (Clinical Applications)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:1px; display:block; margin-bottom:6px">QUESTION TYPE</label>
+              <select id="quizType" class="quiz-select">
+                <option value="mcq">Multiple Choice (MCQ)</option>
+                <option value="truefalse">True / False</option>
+                <option value="mix">Mixed Format</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:1px; display:block; margin-bottom:6px">NUMBER OF QUESTIONS</label>
+              <select id="quizCount" class="quiz-select">
+                <option value="3">3 Questions</option>
+                <option value="5" selected>5 Questions</option>
+                <option value="10">10 Questions</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="generateBtn" onclick="generateQuiz()">
+            ⚡ Generate Quiz
+          </button>
+        </div>
+
+        <div id="quizLoading" class="quiz-loading" style="display:none">
+          <div class="spinner"></div>
+          <p style="color:var(--muted); font-size:14px">Generating your personalized quiz questions...</p>
+        </div>
+
+        <div id="quizContainer" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          <div id="questionsWrapper"></div>
+
+          <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap">
+            <button class="btn btn-primary" id="submitBtn" onclick="submitQuiz()" style="display:none">
+              ✅ Submit Answers
+            </button>
+            <button class="btn btn-secondary" id="newQuizBtn" onclick="resetQuiz()" style="display:none">
+              🔄 New Quiz
+            </button>
+          </div>
+
+          <div class="quiz-score" id="scoreCard">
+            <div class="score-val" id="scoreVal">0/0</div>
+            <p style="color:var(--muted); margin-top:8px; font-size:14px" id="scoreFeedback"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ─── NAV ───
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ─── FLOATING DOTS ANIMATION ───
+(function() {
+  const container = document.getElementById('floatingDots');
+  if (!container) return;
+  for (let i = 0; i < 20; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    const size = Math.random() * 6 + 2;
+    const hue = Math.random() > 0.5 ? '#00e5c8' : '#0088ff';
+    dot.style.cssText = `
+      width:${size}px; height:${size}px; background:${hue};
+      left:${Math.random()*100}%; top:${Math.random()*100}%;
+      animation-duration:${Math.random()*8+4}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    container.appendChild(dot);
+  }
+})();
+
+// ─── QUIZ SYSTEM ───
+let currentQuestions = [];
+let userAnswers = {};
+let submitted = false;
+
+async function generateQuiz() {
+  const topic = document.getElementById('quizTopic').value;
+  const difficulty = document.getElementById('quizDifficulty').value;
+  const qtype = document.getElementById('quizType').value;
+  const count = document.getElementById('quizCount').value;
+
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('quizLoading').style.display = 'block';
+  document.getElementById('quizContainer').style.display = 'none';
+  document.getElementById('scoreCard').style.display = 'none';
+  document.getElementById('questionsWrapper').innerHTML = '';
+  userAnswers = {};
+  submitted = false;
+
+  const topicMap = {
+    all: 'all topics from Chapter 1: The Cell as a Unit of Health and Disease (The Genome, Noncoding DNA, Histones/Epigenetics, miRNA/lncRNA, Gene Editing/CRISPR, Cellular Housekeeping/Organelles, Plasma Membrane/Transport, Cytoskeleton/Junctions, Cellular Metabolism/Mitochondria, Cell Signaling/Signal Transduction, Growth Factors/Receptors)',
+    genome: 'The Human Genome — including its structure, size, number of protein-coding genes, noncoding vs coding DNA, and the significance of genome sequencing in pathology',
+    epigenetics: 'Histone Organization and Epigenetics — including nucleosomes, chromatin states, heterochromatin, euchromatin, histone modifications (acetylation, methylation, phosphorylation), DNA methylation, and their roles in gene expression and disease',
+    rna: 'MicroRNAs (miRNA) and Long Noncoding RNAs (lncRNA) — including their biogenesis, mechanisms of action (RISC complex, Dicer), and roles in gene regulation and disease',
+    crispr: 'CRISPR-Cas9 Gene Editing — including its bacterial origin, mechanism (guide RNA, Cas9 nuclease, double-strand breaks, HDR vs NHEJ repair), and clinical applications and ethical considerations',
+    organelles: 'Cellular Housekeeping and Organelles — including the roles of the Rough ER, Smooth ER, Golgi apparatus, lysosomes (autophagy, heterophagy), peroxisomes, and proteasomes in cell function and disease',
+    membrane: 'Plasma Membrane — including its structure (lipid bilayer, cholesterol, glycoproteins), asymmetry, transport mechanisms (passive diffusion, channels, carriers, endocytosis, exocytosis, transcytosis), and membrane proteins',
+    cytoskeleton: 'Cytoskeleton and Cell Junctions — including actin filaments, intermediate filaments, microtubules, tight junctions, adherens junctions, desmosomes, hemidesmosomes, gap junctions, and focal adhesions',
+    metabolism: 'Cellular Metabolism and Mitochondrial Function — including oxidative phosphorylation, ATP synthesis, the Warburg effect in cancer, mitochondrial DNA, apoptosis (cytochrome C, caspases, BCL-2 family), and reactive oxygen species',
+    signaling: 'Cell Signaling and Signal Transduction — including autocrine, paracrine, endocrine, and synaptic signaling; receptor types (GPCRs, RTKs, nuclear receptors); and key pathways (RAS/MAPK, PI3K/AKT/mTOR, Notch, Wnt/β-catenin)',
+    growth: 'Growth Factors and Receptors — including EGF, VEGF, PDGF, HGF, FGF, TGF-β, their sources and functions; receptor tyrosine kinases; proto-oncogenes and oncogenes; and transcription factors'
+  };
+
+  const diffMap = {
+    basic: 'basic level (definitions, factual recall — suitable for first-year medical/pathology students). Focus on "what is" and "what does".',
+    intermediate: 'intermediate level (mechanisms and processes — suitable for second-year medical students). Focus on "how" and "why".',
+    advanced: 'advanced level (clinical applications, pathological consequences, drug targets — suitable for clinical year students and postgraduate level). Focus on clinical correlations, disease mechanisms, and therapeutics.'
+  };
+
+  const qtypeMap = {
+    mcq: 'multiple choice questions with 4 options (A, B, C, D) — exactly one correct answer per question',
+    truefalse: 'true/false questions where the question is a statement that is either true or false',
+    mix: 'a mix of multiple choice (3-4 options, one correct) and true/false questions'
+  };
+
+  const prompt = `You are an expert medical educator and pathologist. Generate exactly ${count} quiz questions about ${topicMap[topic]}.
+
+Difficulty level: ${diffMap[difficulty]}
+Question type: ${qtypeMap[qtype]}
+
+Return ONLY valid JSON in this exact format (no markdown, no extra text):
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "mcq",
+      "question": "Question text here?",
+      "options": ["A. First option", "B. Second option", "C. Third option", "D. Fourth option"],
+      "correct": 0,
+      "explanation": "Brief explanation of why this is correct and why others are wrong."
+    }
+  ]
+}
+
+For true/false questions, use:
+{
+  "id": 2,
+  "type": "truefalse",
+  "question": "Statement here.",
+  "options": ["True", "False"],
+  "correct": 0,
+  "explanation": "Explanation here."
+}
+
+Rules:
+- Make questions clinically relevant and academically rigorous
+- Explanations should be educational and reference pathological mechanisms
+- Distractors (wrong answers) should be plausible but clearly wrong to a knowledgeable student
+- Do NOT include the answer letter in the question text
+- Return ONLY the JSON object, nothing else`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    currentQuestions = parsed.questions;
+    renderQuiz();
+  } catch(err) {
+    document.getElementById('quizLoading').style.display = 'none';
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('questionsWrapper').innerHTML = `
+      <div class="warn-point">
+        <strong>⚠️ Generation Error</strong>
+        Could not generate quiz questions. Please check your connection and try again. (${err.message})
+      </div>`;
+    document.getElementById('quizContainer').style.display = 'block';
+  }
+}
+
+function renderQuiz() {
+  document.getElementById('quizLoading').style.display = 'none';
+  document.getElementById('quizContainer').style.display = 'block';
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('submitBtn').style.display = 'inline-flex';
+  document.getElementById('newQuizBtn').style.display = 'none';
+  document.getElementById('progressFill').style.width = '0%';
+
+  const wrapper = document.getElementById('questionsWrapper');
+  wrapper.innerHTML = '';
+
+  currentQuestions.forEach((q, qi) => {
+    const letters = ['A','B','C','D','E'];
+    const optionsHTML = q.options.map((opt, oi) => `
+      <button class="option-btn" id="opt_${qi}_${oi}" onclick="selectAnswer(${qi}, ${oi})" data-qi="${qi}" data-oi="${oi}">
+        <span class="option-label">${letters[oi]}</span>
+        ${opt}
+      </button>
+    `).join('');
+
+    wrapper.innerHTML += `
+      <div class="quiz-question-card" id="qcard_${qi}">
+        <div class="question-num">// QUESTION ${qi + 1} OF ${currentQuestions.length}</div>
+        <div class="question-text">${q.question}</div>
+        <div class="options-list">${optionsHTML}</div>
+        <div class="explanation-box" id="exp_${qi}">
+          <strong style="color:var(--accent); font-size:12px; letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:6px">📖 Explanation</strong>
+          ${q.explanation}
+        </div>
+      </div>
+    `;
+  });
+}
+
+function selectAnswer(qi, oi) {
+  if (submitted) return;
+  userAnswers[qi] = oi;
+
+  // Clear selection for this question
+  document.querySelectorAll(`[data-qi="${qi}"]`).forEach(btn => {
+    btn.classList.remove('correct', 'wrong');
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  });
+
+  // Highlight selected
+  const btn = document.getElementById(`opt_${qi}_${oi}`);
+  btn.style.background = 'rgba(0,136,255,0.15)';
+  btn.style.borderColor = 'var(--accent2)';
+  btn.style.color = '#fff';
+
+  // Update progress
+  const pct = (Object.keys(userAnswers).length / currentQuestions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function submitQuiz() {
+  if (Object.keys(userAnswers).length < currentQuestions.length) {
+    const missing = currentQuestions.length - Object.keys(userAnswers).length;
+    if (!confirm(`You have ${missing} unanswered question(s). Submit anyway?`)) return;
+  }
+
+  submitted = true;
+  let score = 0;
+
+  currentQuestions.forEach((q, qi) => {
+    const chosen = userAnswers[qi];
+    const correct = q.correct;
+
+    // Show all options
+    q.options.forEach((_, oi) => {
+      const btn = document.getElementById(`opt_${qi}_${oi}`);
+      btn.disabled = true;
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+
+      if (oi === correct) btn.classList.add('correct');
+      else if (oi === chosen && chosen !== correct) btn.classList.add('wrong');
+    });
+
+    if (chosen === correct) score++;
+
+    // Show explanation
+    document.getElementById(`exp_${qi}`).classList.add('show');
+  });
+
+  const pct = Math.round((score / currentQuestions.length) * 100);
+  let feedback = '';
+  if (pct >= 90) feedback = '🏆 Exceptional! You have mastered this material.';
+  else if (pct >= 70) feedback = '✅ Good performance. Review the explanations for missed questions.';
+  else if (pct >= 50) feedback = '📚 Keep studying. Focus on the areas where you got answers wrong.';
+  else feedback = '💪 Don\'t give up! Review the module content and try again.';
+
+  document.getElementById('scoreVal').textContent = `${score}/${currentQuestions.length}`;
+  document.getElementById('scoreFeedback').textContent = `${pct}% — ${feedback}`;
+  document.getElementById('scoreCard').style.display = 'block';
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('newQuizBtn').style.display = 'inline-flex';
+}
+
+function resetQuiz() {
+  userAnswers = {};
+  submitted = false;
+  currentQuestions = [];
+  document.getElementById('questionsWrapper').innerHTML = '';
+  document.getElementById('quizContainer').style.display = 'none';
+  document.getElementById('scoreCard').style.display = 'none';
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('newQuizBtn').style.display = 'none';
+  document.getElementById('progressFill').style.width = '0%';
+}
+</script>
+</body>
+</html>
